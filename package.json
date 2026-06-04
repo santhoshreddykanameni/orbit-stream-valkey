@@ -1,0 +1,23 @@
+{
+  "name": "@orbit-stream/valkey",
+  "version": "1.0.0",
+  "description": "High-performance Valkey Streams transport adapter for Orbit Stream telemetry streaming.",
+  "main": "src/index.js",
+  "types": "index.d.ts",
+  "files": [
+    "src",
+    "index.d.ts"
+  ],
+  "dependencies": {
+    "@orbit-stream/core": "^1.0.0",
+    "ioredis": "^5.4.1"
+  },
+  "keywords": [
+    "valkey",
+    "redis-streams",
+    "streaming",
+    "telemetry",
+    "orbit-stream"
+  ],
+  "license": "MIT"
+}
