@@ -1,15 +1,15 @@
 {
   "name": "@orbit-stream/valkey",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "High-performance Valkey Streams transport adapter for Orbit Stream telemetry streaming.",
-  "main": "src/index.js",
+  "main": "index.js",
   "types": "index.d.ts",
   "files": [
     "src",
     "index.d.ts"
   ],
   "dependencies": {
-    "@orbit-stream/core": "^1.0.0",
+    "@orbit-stream/core": "^1.0.3",
     "ioredis": "^5.4.1"
   },
   "keywords": [

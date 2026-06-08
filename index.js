@@ -1,3 +1,3 @@
 module.exports = {
-  ValkeyAdapter: require("./adapters/ValkeyAdapter"),
+  OrbitStream: require("./src/adapters/ValkeyAdapter"),
 };

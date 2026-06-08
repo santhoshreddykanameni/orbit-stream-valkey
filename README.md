@@ -37,9 +37,9 @@ npm install @orbit-stream/valkey
 # Usage
 
 ```js
-const { ValkeyAdapter } = require("@orbit-stream/valkey");
+const { OrbitStream } = require("@orbit-stream/valkey");
 
-const stream = new ValkeyAdapter({
+const stream = new OrbitStream({
   host: "127.0.0.1",
 
   port: 6379,
