@@ -1,6 +1,6 @@
 {
   "name": "@orbit-stream/valkey",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "High-performance Valkey Streams transport adapter for Orbit Stream telemetry streaming.",
   "main": "index.js",
   "types": "index.d.ts",

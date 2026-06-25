@@ -1,23 +1,39 @@
+const { serializer } = require("@orbit-stream/core");
+
 class Consumer {
   constructor(redis, config = {}) {
     this.redis = redis;
+
+    this.connected = false;
 
     this.block = config.block || 100;
 
     this.count = config.count || 500;
   }
 
-  async ensureGroup(stream, groupId) {
+  async connect() {
+    if (this.connected) {
+      return;
+    }
+
+    this.connected = true;
+  }
+
+  async disconnect() {
+    if (!this.connected) {
+      return;
+    }
+
+    this.connected = false;
+  }
+
+  async ensureGroup(stream, groupId, fromBeginning = false) {
     try {
       await this.redis.xgroup(
         "CREATE",
-
         stream,
-
         groupId,
-
-        "$",
-
+        fromBeginning ? "0" : "$",
         "MKSTREAM",
       );
     } catch (error) {
@@ -27,35 +43,49 @@ class Consumer {
     }
   }
 
+  deserializeValue(value) {
+    if (!value) {
+      return null;
+    }
+
+    try {
+      return serializer.deserialize(value);
+    } catch {
+      return value;
+    }
+  }
+
+  deserializeHeaders(headers) {
+    if (!headers) {
+      return {};
+    }
+
+    try {
+      return JSON.parse(headers);
+    } catch {
+      return {};
+    }
+  }
+
   async subscribe(stream, handler, options = {}) {
-    const { groupId, consumerId } = options;
+    const groupId =
+      options.groupId || options.consumerGroup || "orbit-stream-group";
 
-    await this.ensureGroup(
-      stream,
+    const consumerId = options.consumerId || options.clientId || "consumer-1";
 
-      groupId,
-    );
+    await this.ensureGroup(stream, groupId, options.fromBeginning || false);
 
     while (true) {
       const result = await this.redis.xreadgroup(
         "GROUP",
-
         groupId,
-
         consumerId,
-
         "COUNT",
-
         this.count,
-
         "BLOCK",
-
         this.block,
-
         "STREAMS",
-
         stream,
-
         ">",
       );
 
@@ -71,24 +101,40 @@ class Consumer {
         for (const [id, fields] of entries) {
           ids.push(id);
 
-          messages.push({
-            id,
+          const map = {};
 
-            value: fields[1],
+          for (let i = 0; i < fields.length; i += 2) {
+            map[fields[i]] = fields[i + 1];
+          }
+
+          const timestamp = Number(id.split("-")[0]);
+
+          messages.push({
+            key: map.key || null,
+
+            value: this.deserializeValue(map.data),
+
+            headers: this.deserializeHeaders(map.headers),
+
+            timestamp,
+
+            partition: 0,
+
+            offset: id,
+
+            id,
           });
         }
       }
 
-      await handler(messages);
+      try {
+        await handler(messages);
 
-      if (ids.length) {
-        await this.redis.xack(
-          stream,
-
-          groupId,
-
-          ...ids,
-        );
+        if (options.autoCommit ?? true) {
+          await this.redis.xack(stream, groupId, ...ids);
+        }
+      } catch (error) {
+        console.error("[OrbitStream] Consumer handler failed:", error);
       }
     }
   }
